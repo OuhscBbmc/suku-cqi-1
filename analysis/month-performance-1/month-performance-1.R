@@ -113,13 +113,14 @@ x_breaks  <- ds$month
 
 g1 <-
   ds %>%
-  dplyr::filter(metric == "statin") %>%
+  # dplyr::filter(metric == "statin") %>%
+  # dplyr::filter(metric == "smoking") %>%
   ggplot(aes(x=month, y=proportion, size=denominator, group=metric, label=label, color =phase)) +
   geom_text(aes(y = -Inf, size=5), angle = 90, hjust = 0) +
   geom_vline(xintercept = config$intervention_start, size = 4, color = "gray70", alpha = .6) +
   annotate("text", label = "intervention starts", x = config$intervention_start, y = .5, hjust = .5, angle = 90, alpha = .4) +
-  geom_line(size=.5, color = "gray70") +
-  geom_point(aes(fill = phase), shape=21, alpha = .5) +
+  geom_line(data=ds[!is.na(ds$proportion), ], size=.5, color = "gray70", inherit.aes = TRUE) +
+  geom_point(aes(fill = phase), shape=21, alpha = .5, na.rm = T) +
   scale_x_date(breaks = x_breaks, date_labels = "%b\n%Y") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_color_manual(values = palette_dark, guide = "none") +
@@ -132,17 +133,16 @@ g1 <-
   labs(x = NULL, y = "Percent Completed")
 g1
 
-g1 %+% ds
 
 # ---- models ------------------------------------------------------------------
-m1 <- lm(proportion ~ 1 + post, data = ds, subset = (metric == "statin"))
+m1 <- lm(proportion ~ 1 + post, data = ds)#, subset = (metric == "statin"))
 summary(m1)
 
 m2 <- glm(
   numerator / denominator ~ 1 + post,
   family  = quasipoisson,
+  # subset = (metric == "statin")
   data    = ds,
-  subset = (metric == "statin")
 )
 summary(m2)
 

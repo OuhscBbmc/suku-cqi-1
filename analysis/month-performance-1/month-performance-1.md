@@ -70,16 +70,6 @@ Scatterplots
 
 ![](figure-png/scatterplots-1.png)<!-- -->
 
-```
-Warning: Removed 4 rows containing missing values (geom_path).
-```
-
-```
-Warning: Removed 5 rows containing missing values (geom_point).
-```
-
-![](figure-png/scatterplots-2.png)<!-- -->
-
 
 Models
 ===========================================================================
@@ -90,42 +80,43 @@ Model Exploration
 ```
 
 Call:
-lm(formula = proportion ~ 1 + post, data = ds, subset = (metric == 
-    "statin"))
+lm(formula = proportion ~ 1 + post, data = ds)
 
 Residuals:
-         4          9         14         19         24         29 
- 3.571e-02 -1.071e-01  3.571e-02  3.571e-02  3.469e-18  3.469e-18 
+     Min       1Q   Median       3Q      Max 
+-0.82857 -0.02857  0.11828  0.11828  0.17143 
 
 Coefficients:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept)  0.96429    0.03093  31.177 6.31e-06
-post         0.03571    0.05357   0.667    0.541
+(Intercept)  0.88172    0.05553  15.878 6.91e-14
+post        -0.05315    0.10495  -0.506    0.617
 
-Residual standard error: 0.06186 on 4 degrees of freedom
-Multiple R-squared:    0.1,	Adjusted R-squared:  -0.125 
-F-statistic: 0.4444 on 1 and 4 DF,  p-value: 0.5415
+Residual standard error: 0.2356 on 23 degrees of freedom
+  (5 observations deleted due to missingness)
+Multiple R-squared:  0.01103,	Adjusted R-squared:  -0.03197 
+F-statistic: 0.2565 on 1 and 23 DF,  p-value: 0.6173
 ```
 
 ```
 
 Call:
 glm(formula = numerator/denominator ~ 1 + post, family = quasipoisson, 
-    data = ds, subset = (metric == "statin"))
+    data = ds)
 
 Deviance Residuals: 
-       4         9        14        19        24        29  
- 0.03615  -0.11123   0.03615   0.03615   0.00000   0.00000  
+     Min        1Q    Median        3Q       Max  
+-1.28730  -0.03157   0.12329   0.12329   0.18234  
 
 Coefficients:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept) -0.03637    0.03208  -1.134    0.320
-post         0.03637    0.05489   0.663    0.544
+(Intercept) -0.12588    0.06429  -1.958   0.0625
+post        -0.06218    0.12427  -0.500   0.6216
 
-(Dispersion parameter for quasipoisson family taken to be 0.003968254)
+(Dispersion parameter for quasipoisson family taken to be 0.06559416)
 
-    Null deviance: 0.018027  on 5  degrees of freedom
-Residual deviance: 0.016292  on 4  degrees of freedom
+    Null deviance: 2.3827  on 24  degrees of freedom
+Residual deviance: 2.3661  on 23  degrees of freedom
+  (5 observations deleted due to missingness)
 AIC: NA
 
 Number of Fisher Scoring iterations: 4
@@ -138,10 +129,10 @@ Final Model
 
 |            | Estimate| Std. Error| t value| Pr(>&#124;t&#124;)|
 |:-----------|--------:|----------:|-------:|------------------:|
-|(Intercept) |    -0.04|       0.03|   -1.13|               0.32|
-|post        |     0.04|       0.05|    0.66|               0.54|
+|(Intercept) |    -0.13|       0.06|   -1.96|               0.06|
+|post        |    -0.06|       0.12|   -0.50|               0.62|
 
-In the model that includes two predictors, the slope coefficent of `Miles per gallon` is 0.0363676.
+In the model that includes two predictors, the slope coefficent of `Miles per gallon` is -0.062176.
 
 
 Session Information {#session-info}
@@ -235,4 +226,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by wibeasley at 2020-02-29, 11:05 -0600 in 5 seconds.
+Report rendered by wibeasley at 2020-02-29, 11:15 -0600 in 5 seconds.
