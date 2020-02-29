@@ -127,7 +127,7 @@ g1 <-
   scale_fill_manual(values = palette_light, guide = "none") +
   scale_size(guide = "none") +
   coord_cartesian(ylim = c(0, 1)) +
-  facet_wrap("metric") +
+  facet_wrap("metric", ncol = 2) +
   theme_light() +
   theme(axis.ticks = element_blank()) +
   labs(x = NULL, y = "Percent Completed")
