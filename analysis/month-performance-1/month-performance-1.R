@@ -17,6 +17,9 @@ requireNamespace("dplyr")
 # ---- declare-globals ---------------------------------------------------------
 options(show.signif.stars=F) #Turn off the annotations on p-values
 config                      <- config::get()
+levels_metric       <- c(
+  "stroke", "antithromb", "anticoag", "statin", "smoking", "cumulative"
+)
 
 palette_dark <- list( # http://colrd.com/image-dna/50489/
   # "#141e1f",            # black
@@ -62,20 +65,37 @@ ds_wide <- readr::read_csv(config$path_month_raw, col_types = col_types)
 pattern <- "^(\\w+)_(numerator|denominator)$"
 ds <-
   ds_wide %>%
+  dplyr::mutate(
+    cumulative_numerator =
+      dplyr::coalesce(stroke_numerator        , 0L) +
+      dplyr::coalesce(antithromb_numerator    , 0L) +
+      dplyr::coalesce(anticoag_numerator      , 0L) +
+      dplyr::coalesce(statin_numerator        , 0L) +
+      dplyr::coalesce(smoking_numerator       , 0L),
+    cumulative_denominator =
+      dplyr::coalesce(stroke_denominator      , 0L) +
+      dplyr::coalesce(antithromb_denominator  , 0L) +
+      dplyr::coalesce(anticoag_denominator    , 0L) +
+      dplyr::coalesce(statin_denominator      , 0L) +
+      dplyr::coalesce(smoking_denominator     , 0L),
+  ) %>%
   tidyr::pivot_longer(
     cols            = tidyselect::matches(pattern),
     names_to        = c("metric", ".value"),
     names_pattern   = pattern
   ) %>%
-  dplyr::filter(metric != "cumulative") %>%
+  # dplyr::filter(metric != "cumulative") %>%
   dplyr::mutate(
     post        = dplyr::recode(phase, "pre" = 0L, "post" = 1L),
     phase       = factor(phase, levels = c("pre", "post")),
+    metric      = factor(metric, levels = levels_metric),
     proportion  = numerator     / denominator,
     label       = dplyr::if_else(
       denominator == 0L,
-      sprintf("  --%% (%2i of %2i)"                   , numerator, denominator),
-      sprintf("%4.0f%% (%2i of %2i)", proportion * 100, numerator, denominator)
+      sprintf("  --%% of %2i"                   , denominator),
+      sprintf("%4.0f%% of %2i", proportion * 100, denominator)
+      # sprintf("  --%% (%2i of %2i)"                   , numerator, denominator),
+      # sprintf("%4.0f%% (%2i of %2i)", proportion * 100, numerator, denominator)
     ),
   )
 
@@ -116,8 +136,8 @@ g1 <-
   # dplyr::filter(metric == "statin") %>%
   # dplyr::filter(metric == "smoking") %>%
   ggplot(aes(x=month, y=proportion, size=denominator, group=metric, label=label, color =phase)) +
-  geom_text(aes(y = -Inf, size=5), angle = 90, hjust = 0) +
-  geom_vline(xintercept = config$intervention_start, size = 4, color = "gray70", alpha = .6) +
+  geom_text(aes(y = -Inf, size=10), alpha = .6, angle = 90, hjust = 0, family = "mono") +
+  geom_vline(xintercept = config$intervention_start, size = 4, color = "gray80", alpha = .4) +
   annotate("text", label = "intervention starts", x = config$intervention_start, y = .5, hjust = .5, angle = 90, alpha = .4) +
   geom_line(data=ds[!is.na(ds$proportion), ], size=.5, color = "gray70", inherit.aes = TRUE) +
   geom_point(aes(fill = phase), shape=21, alpha = .5, na.rm = T) +
@@ -135,13 +155,14 @@ g1
 
 
 # ---- models ------------------------------------------------------------------
-m1 <- lm(proportion ~ 1 + post, data = ds)#, subset = (metric == "statin"))
+m1 <- lm(proportion ~ 1 + post, data = ds, subset = (metric != "cumulative"))
 summary(m1)
 
 m2 <- glm(
   numerator / denominator ~ 1 + post,
   family  = quasipoisson,
   # subset = (metric == "statin")
+  subset = (metric != "cumulative"),
   data    = ds,
 )
 summary(m2)

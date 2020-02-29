@@ -43,7 +43,7 @@ Summary {.tabset .tabset-fade .tabset-pills}
 Notes
 ---------------------------------------------------------------------------
 
-1. The current report covers 30 month, with 2 unique values for `month`.
+1. The current report covers 36 month, with 2 unique values for `month`.
 
 
 Unanswered Questions
@@ -80,7 +80,8 @@ Model Exploration
 ```
 
 Call:
-lm(formula = proportion ~ 1 + post, data = ds)
+lm(formula = proportion ~ 1 + post, data = ds, subset = (metric != 
+    "cumulative"))
 
 Residuals:
      Min       1Q   Median       3Q      Max 
@@ -101,7 +102,7 @@ F-statistic: 0.2565 on 1 and 23 DF,  p-value: 0.6173
 
 Call:
 glm(formula = numerator/denominator ~ 1 + post, family = quasipoisson, 
-    data = ds)
+    data = ds, subset = (metric != "cumulative"))
 
 Deviance Residuals: 
      Min        1Q    Median        3Q       Max  
@@ -226,4 +227,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by wibeasley at 2020-02-29, 11:45 -0600 in 5 seconds.
+Report rendered by wibeasley at 2020-02-29, 12:07 -0600 in 7 seconds.
