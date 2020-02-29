@@ -56,31 +56,46 @@ col_types <- readr::cols_only(
 )
 
 # ---- load-data ---------------------------------------------------------------
-ds <- readr::read_csv(config$path_month_raw, col_types = col_types)
+ds_wide <- readr::read_csv(config$path_month_raw, col_types = col_types)
 
 # ---- tweak-data --------------------------------------------------------------
+pattern <- "^(\\w+)_(numerator|denominator)$"
 ds <-
-  ds %>%
-  dplyr::mutate(
-    post  = dplyr::recode(phase, "pre" = 0L, "post" = 1L),
-    phase = factor(phase, levels = c("pre", "post")),
+  ds_wide %>%
+  tidyr::pivot_longer(
+    cols            = tidyselect::matches(pattern),
+    names_to        = c("metric", ".value"),
+    names_pattern   = pattern
   ) %>%
+  dplyr::filter(metric != "cumulative") %>%
   dplyr::mutate(
-    stroke_proportion     = stroke_numerator     / stroke_denominator     ,
-    antithromb_proportion = antithromb_numerator / antithromb_denominator ,
-    anticoag_proportion   = anticoag_numerator   / anticoag_denominator   ,
-    statin_proportion     = statin_numerator     / statin_denominator     ,
-    smoking_proportion    = smoking_numerator    / smoking_denominator    ,
-    cumulative_proportion = cumulative_numerator / cumulative_denominator ,
-  ) %>%
-  dplyr::mutate(
-    stroke_label     = sprintf("%4.0f%% (%2i of %2i)", stroke_proportion     * 100, stroke_numerator     , stroke_denominator     ),
-    antithromb_label = sprintf("%4.0f%% (%2i of %2i)", antithromb_proportion * 100, antithromb_numerator , antithromb_denominator ),
-    anticoag_label   = sprintf("%4.0f%% (%2i of %2i)", anticoag_proportion   * 100, anticoag_numerator   , anticoag_denominator   ),
-    statin_label     = sprintf("%4.0f%% (%2i of %2i)", statin_proportion     * 100, statin_numerator     , statin_denominator     ),
-    smoking_label    = sprintf("%4.0f%% (%2i of %2i)", smoking_proportion    * 100, smoking_numerator    , smoking_denominator    ),
-    cumulative_label = sprintf("%4.0f%% (%2i of %2i)", cumulative_proportion * 100, cumulative_numerator , cumulative_denominator ),
+    post        = dplyr::recode(phase, "pre" = 0L, "post" = 1L),
+    phase       = factor(phase, levels = c("pre", "post")),
+    proportion  = numerator     / denominator,
+    label       = dplyr::if_else(
+      denominator == 0L,
+      sprintf("  --%% (%2i of %2i)"                   , numerator, denominator),
+      sprintf("%4.0f%% (%2i of %2i)", proportion * 100, numerator, denominator)
+    ),
   )
+
+
+  # dplyr::mutate(
+  #   stroke_proportion     = stroke_numerator     / stroke_denominator     ,
+  #   antithromb_proportion = antithromb_numerator / antithromb_denominator ,
+  #   anticoag_proportion   = anticoag_numerator   / anticoag_denominator   ,
+  #   statin_proportion     = statin_numerator     / statin_denominator     ,
+  #   smoking_proportion    = smoking_numerator    / smoking_denominator    ,
+  #   cumulative_proportion = cumulative_numerator / cumulative_denominator ,
+  # ) %>%
+  # dplyr::mutate(
+  #   stroke_label     = sprintf("%4.0f%% (%2i of %2i)", stroke_proportion     * 100, stroke_numerator     , stroke_denominator     ),
+  #   antithromb_label = sprintf("%4.0f%% (%2i of %2i)", antithromb_proportion * 100, antithromb_numerator , antithromb_denominator ),
+  #   anticoag_label   = sprintf("%4.0f%% (%2i of %2i)", anticoag_proportion   * 100, anticoag_numerator   , anticoag_denominator   ),
+  #   statin_label     = sprintf("%4.0f%% (%2i of %2i)", statin_proportion     * 100, statin_numerator     , statin_denominator     ),
+  #   smoking_label    = sprintf("%4.0f%% (%2i of %2i)", smoking_proportion    * 100, smoking_numerator    , smoking_denominator    ),
+  #   cumulative_label = sprintf("%4.0f%% (%2i of %2i)", cumulative_proportion * 100, cumulative_numerator , cumulative_denominator ),
+  # )
 
 # ---- marginals ---------------------------------------------------------------
 # # Inspect continuous variables
@@ -97,7 +112,9 @@ ds <-
 x_breaks  <- ds$month
 
 g1 <-
-  ggplot(ds, aes(x=month, y=statin_proportion, size=statin_denominator, label=statin_label, color = phase)) +
+  ds %>%
+  dplyr::filter(metric == "statin") %>%
+  ggplot(aes(x=month, y=proportion, size=denominator, group=metric, label=label, color =phase)) +
   geom_text(aes(y = -Inf, size=5), angle = 90, hjust = 0) +
   geom_vline(xintercept = config$intervention_start, size = 4, color = "gray70", alpha = .6) +
   annotate("text", label = "intervention starts", x = config$intervention_start, y = .5, hjust = .5, angle = 90, alpha = .4) +
@@ -109,22 +126,23 @@ g1 <-
   scale_fill_manual(values = palette_light, guide = "none") +
   scale_size(guide = "none") +
   coord_cartesian(ylim = c(0, 1)) +
+  facet_wrap("metric") +
   theme_light() +
   theme(axis.ticks = element_blank()) +
-  labs(x = NULL, y = "statin")
+  labs(x = NULL, y = "Percent Completed")
 g1
 
-# g1 %+% aes(color=cylinder_count)
-
+g1 %+% ds
 
 # ---- models ------------------------------------------------------------------
-m1 <- lm(statin_proportion ~ 1 + post, data=ds)
+m1 <- lm(proportion ~ 1 + post, data = ds, subset = (metric == "statin"))
 summary(m1)
 
 m2 <- glm(
-  statin_numerator / statin_denominator ~ 1 + post,
+  numerator / denominator ~ 1 + post,
   family  = quasipoisson,
-  data    = ds
+  data    = ds,
+  subset = (metric == "statin")
 )
 summary(m2)
 

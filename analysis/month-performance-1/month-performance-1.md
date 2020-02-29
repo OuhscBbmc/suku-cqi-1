@@ -43,7 +43,7 @@ Summary {.tabset .tabset-fade .tabset-pills}
 Notes
 ---------------------------------------------------------------------------
 
-1. The current report covers 6 month, with 2 unique values for `month`.
+1. The current report covers 30 month, with 2 unique values for `month`.
 
 
 Unanswered Questions
@@ -70,6 +70,16 @@ Scatterplots
 
 ![](figure-png/scatterplots-1.png)<!-- -->
 
+```
+Warning: Removed 4 rows containing missing values (geom_path).
+```
+
+```
+Warning: Removed 5 rows containing missing values (geom_point).
+```
+
+![](figure-png/scatterplots-2.png)<!-- -->
+
 
 Models
 ===========================================================================
@@ -80,10 +90,11 @@ Model Exploration
 ```
 
 Call:
-lm(formula = statin_proportion ~ 1 + post, data = ds)
+lm(formula = proportion ~ 1 + post, data = ds, subset = (metric == 
+    "statin"))
 
 Residuals:
-         1          2          3          4          5          6 
+         4          9         14         19         24         29 
  3.571e-02 -1.071e-01  3.571e-02  3.571e-02  3.469e-18  3.469e-18 
 
 Coefficients:
@@ -99,11 +110,11 @@ F-statistic: 0.4444 on 1 and 4 DF,  p-value: 0.5415
 ```
 
 Call:
-glm(formula = statin_numerator/statin_denominator ~ 1 + post, 
-    family = quasipoisson, data = ds)
+glm(formula = numerator/denominator ~ 1 + post, family = quasipoisson, 
+    data = ds, subset = (metric == "statin"))
 
 Deviance Residuals: 
-       1         2         3         4         5         6  
+       4         9        14        19        24        29  
  0.03615  -0.11123   0.03615   0.03615   0.00000   0.00000  
 
 Coefficients:
@@ -207,6 +218,7 @@ For the sake of documentation and reproducibility, the current report was render
  stringr       1.4.0   2019-02-10 [1] CRAN (R 3.6.1)
  testthat      2.3.1   2019-12-01 [1] CRAN (R 3.6.1)
  tibble        2.1.3   2019-06-06 [1] CRAN (R 3.6.1)
+ tidyr         1.0.2   2020-01-24 [1] CRAN (R 3.6.2)
  tidyselect    1.0.0   2020-01-27 [1] CRAN (R 3.6.2)
  usethis       1.5.1   2019-07-04 [1] CRAN (R 3.6.1)
  vctrs         0.2.3   2020-02-20 [1] CRAN (R 3.6.2)
@@ -223,4 +235,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by wibeasley at 2020-02-29, 10:33 -0600 in 4 seconds.
+Report rendered by wibeasley at 2020-02-29, 11:05 -0600 in 5 seconds.
