@@ -6,7 +6,8 @@ rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous ru
 # source("SomethingSomething.R")
 
 # ---- load-packages -----------------------------------------------------------
-library(ggplot2) #For graphing
+library(ggplot2) # For graphing
+library(lme4)    # For multilevel models
 import::from("magrittr", "%>%")
 requireNamespace("dplyr")
 # requireNamespace("RColorBrewer")
@@ -90,6 +91,11 @@ ds <-
     phase       = factor(phase, levels = c("pre", "post")),
     metric      = factor(metric, levels = levels_metric),
     proportion  = numerator     / denominator,
+    prior_lower = 1 / (denominator + 10),
+    prior_upper = 1 - 1 / (denominator + 10),
+    proportion_bounded = pmin(pmax(proportion, prior_lower), prior_upper),
+    # proportion_bounded = pmin(pmax(proportion, prior_upper), prior_lower),
+    logit       = qlogis(proportion_bounded),
     label       = dplyr::if_else(
       denominator == 0L,
       sprintf("  --%% of %2i"                   , denominator),
@@ -98,6 +104,8 @@ ds <-
       # sprintf("%4.0f%% (%2i of %2i)", proportion * 100, numerator, denominator)
     ),
   )
+# plot(ds$proportion, ds$proportion_bounded)
+# ds$proportion_bounded
 
 
   # dplyr::mutate(
@@ -155,17 +163,46 @@ g1
 
 
 # ---- models ------------------------------------------------------------------
-m1 <- lm(proportion ~ 1 + post, data = ds, subset = (metric != "cumulative"))
-summary(m1)
+ds_model <-
+  ds %>%
+  dplyr::filter(0L < denominator)
 
+cat("\n\n Model proportion w/ Gaussian link")
+m1a <- lm(proportion ~ 1 + post, data = ds_model, subset = (metric != "cumulative"))
+summary(m1a)
+
+cat("\n\n Model logit w/ Gaussian link")
+m1b <- lm(logit ~ 1 + post, data = ds_model, subset = (metric != "cumulative"))
+summary(m1b)
+
+
+cat("\n\n Model numerator & denominator w/ Poisson link")
 m2 <- glm(
   numerator / denominator ~ 1 + post,
   family  = quasipoisson,
   # subset = (metric == "statin")
   subset = (metric != "cumulative"),
-  data    = ds,
+  data    = ds_model,
 )
 summary(m2)
+
+# m4 <- glmer(
+#   numerator ~ 1 + post + (1 | metric) + offset(log(denominator)),
+#   # family="poisson",
+#   family=poisson(link="log"),
+#   data = ds[0L < ds$denominator, ]
+# )
+# summary(m4)
+#
+# # library(MCMCglmm)
+# summary(MCMCglmm::MCMCglmm(
+#   numerator ~ 1 + post  + offset(log(denominator)),
+#   family    = "poisson",
+#   data      = ds,
+#   verbose   = FALSE
+# ))
+
+
 
 
 # ---- model-results-table  -----------------------------------------------
