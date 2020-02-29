@@ -1,5 +1,7 @@
 month,phase,stroke_numerator,stroke_denominator,antithromb_numerator,antithromb_denominator,anticoag_numerator,anticoag_denominator,statin_numerator,statin_denominator,smoking_numerator,smoking_denominator,cumulative_numerator,cumulative_denominator
-2019-09-15,pre,15,22,20,21,1,2,16,22,6,13,,
-2019-10-15,pre,,,3,3,2,2,3,3,3,3,,
-2019-11-15,post,,,1,1,0,0,1,1,0,0,,
-2019-12-15,post,,,5,5,0,0,5,5,2,2,,
+2019-07-15,pre,2,2,1,1,0,0,1,1,1,2,,
+2019-08-15,pre,6,9,9,9,0,0,6,7,7,8,,
+2019-09-15,pre,6,9,8,9,1,1,9,9,3,4,,
+2019-10-15,pre,2,3,3,3,2,2,3,3,3,3,,
+2019-11-15,post,0,1,1,1,0,0,1,1,0,0,,
+2019-12-15,post,4,5,5,5,0,0,5,5,2,2,,
